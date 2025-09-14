@@ -9,7 +9,7 @@ public class Code_SBLWzkOz {
         // Server
         final String SERVER_HOST = "203.162.10.109";
         final int SERVER_PORT = 2207;
-// 
+
         // Client
         final String studentCode = "B22DCCN505";
         final String qCode = "SBLWzkOz";
