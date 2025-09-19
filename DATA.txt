@@ -1,0 +1,395 @@
+send with data input stream
+
+```python
+//[Mã câu hỏi (qCode): 3hPA07vB].  Một chương trình máy chủ cho phép kết nối qua TCP tại cổng 2207
+// (hỗ trợ thời gian liên lạc tối đa cho mỗi yêu cầu là 5s), yêu cầu xây dựng chương trình (tạm gọi là client)
+// thực hiện kết nối tới server tại cổng 2207, sử dụng luồng byte dữ liệu (DataInputStream/DataOutputStream) để trao đổi thông tin theo thứ tự:
+//a.	Gửi chuỗi là mã sinh viên và mã câu hỏi theo định dạng "studentCode;qCode". Ví dụ: "B15DCCN999;1D25ED92"
+//b.	Nhận lần lượt hai số nguyên a và b từ server
+//c.	Thực hiện tính toán tổng, tích và gửi lần lượt từng giá trị theo đúng thứ tự trên lên server
+//d.	Đóng kết nối và kết thú
+
+        final String SERVER_HOST = "203.162.10.109";
+        final int PORT = 2207;
+        final int TIMEOUT = 5000;
+        int BUFFER_SIZE = 8192;
+
+        String message = "B22DCCN505;3hPA07vB";
+
+        try(Socket socket =  new Socket(SERVER_HOST, PORT)) {
+            socket.setSoTimeout(TIMEOUT);
+
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+
+//            send message
+            dos.writeUTF(message);
+            dos.flush();
+            System.out.println("send success !");
+
+//            received data
+
+//            type String
+//            byte[] data = is.readAllBytes();
+//            String response = new String(data, 0, data.length).trim();
+//            System.out.println("Response is " + response);
+
+            long a = dis.readInt();
+            long b = dis.readInt();
+
+            long sum = a + b;
+            long mul = a * b;
+
+            System.out.println(a + " " + b);
+
+//            send
+            dos.writeInt((int) sum);
+            dos.flush();
+            dos.writeInt((int) mul);
+            dos.flush();
+
+// d. Đóng kết nối
+            System.out.println("Done, closing socket.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+```
+
+send with objectinputstream
+
+```python
+//[Mã câu hỏi (qCode): 2ngIzBXC].  Một chương trình server cho phép kết nối qua giao thức TCP tại cổng 2209 (hỗ trợ thời gian giao tiếp tối đa cho mỗi yêu cầu là 5 giây). Yêu cầu là xây dựng một chương trình client tương tác với server sử dụng các luồng đối tượng (ObjectOutputStream/ObjectInputStream) theo kịch bản dưới đây:
+//
+//Biết lớp TCP.Product gồm các thuộc tính (id int, name String, price double, int discount) và private static final long serialVersionUID = 20231107;
+//
+//a. Gửi đối tượng là một chuỗi gồm mã sinh viên và mã câu hỏi với định dạng "studentCode;qCode". Ví dụ: "B15DCCN999;1E08CA31"
+//
+//b. Nhận một đối tượng là thể hiện của lớp TCP.Product từ server.
+//
+//c. Tính toán giá trị giảm giá theo price theo nguyên tắc: Giá trị giảm giá (discount) bằng tổng các chữ số trong phần nguyên của giá sản phẩm (price). Thực hiện gán giá trị cho thuộc tính discount và gửi lên đối tượng nhận được lên server.
+//
+//d. Đóng kết nối và kết thúc chương trình.
+
+    public static void main(String[] args) {
+
+//       infor
+        final String SERVER_HOST = "203.162.10.109";
+        final int PORT = 2209;
+        final int TIMEOUT = 5000;
+        int BUFFER_SIZE = 8192;
+
+        String message = "B22DCCN505;2ngIzBXC";
+
+        try(Socket socket =  new Socket(SERVER_HOST, PORT)) {
+            socket.setSoTimeout(TIMEOUT);
+
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+//            send
+            oos.writeObject(message);
+            oos.flush();
+            System.out.println("send");
+
+//           read
+            TCP.Product product = (TCP.Product) ois.readObject();
+//            test
+            System.out.println(product.toString());
+            int price = (int) product.getPrice();
+            int discount = product.sumDigits(price);
+            product.setDiscount(discount);
+
+            System.out.println(product.toString());
+//            send
+            oos.writeObject(product);
+            System.out.println("send suceess");;
+
+// d. Đóng kết nối
+            System.out.println("Done, closing socket.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+
+```
+
+send with dataoutputstream
+
+```python
+//[Mã câu hỏi (qCode): gt5ihmSX].  Một chương trình server cho phép kết nối qua TCP tại cổng 2207
+// (hỗ trợ thời gian liên lạc tối đa cho mỗi yêu cầu là 5 giây).
+// Yêu cầu xây dựng chương trình client thực hiện giao tiếp với server sử dụng luồng data
+// (DataInputStream/DataOutputStream) để trao đổi thông tin theo thứ tự:
+//a. Gửi mã sinh viên và mã câu hỏi theo định dạng "studentCode;qCode".
+//Ví dụ: "B10DCCN003;C6D7E8F9"
+//b. Nhận lần lượt:
+//        •	Một số nguyên k là độ dài đoạn.
+//        •	Chuỗi chứa mảng số nguyên, các phần tử được phân tách bởi dấu phẩy ",".
+//Ví dụ: Nhận k = 3 và "1,2,3,4,5,6,7,8".
+//c. Thực hiện chia mảng thành các đoạn có độ dài k và đảo ngược mỗi đoạn, sau đó gửi mảng đã xử lý lên server. Ví dụ: Với k = 3 và mảng "1,2,3,4,5,6,7,8", kết quả là "3,2,1,6,5,4,8,7". Gửi chuỗi kết quả "3,2,1,6,5,4,8,7" lên server.
+//d. Đóng kết nối và kết thúc chương trình
+
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
+
+    public static void main(String[] args) {
+
+        final String SERVER_HOST = "203.162.10.109";
+        final int SERVBR_PORT = 2207;
+        final int BUFFER_SIZE = 4096;
+
+        final String message = "B22DCCN505;gt5ihmSX";
+
+        try(Socket socket = new Socket(SERVER_HOST,SERVBR_PORT)) {
+
+//            input,output
+            DataInputStream  dis = new DataInputStream(socket.getInputStream());
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+
+//            send message
+            dos.writeUTF(message);
+            dos.flush();
+            System.out.println("send success !");
+
+//            received message
+            int k =  dis.readInt();
+
+            String response = dis.readUTF();
+            System.out.println("Response is : " + " " + response);
+
+//          handle request
+            List<String> numbers = Arrays.asList(response.split(","));
+            int len = numbers.toArray().length;
+            System.out.println(len + " " + k);
+
+            Stack<String> stack = new Stack<>();
+            int index = 0;
+            String result = "";
+
+            for(int i = 0; i < len; i++) {
+                if(index == k && !stack.empty()) {
+                    while(!stack.empty()) {
+                        result += stack.pop() + ",";
+                    }
+                    index = 0;
+                }
+                stack.push(numbers.get(i));
+                index++;
+            }
+            if(!stack.empty()) {
+                while(!stack.empty()) {
+                    result += stack.pop() + ",";
+                }
+            }
+            System.out.println(result.substring(0,result.length()-1));
+
+//            reply to server
+            dos.writeUTF(result.substring(0,result.length()-1));
+            dos.flush();
+            System.out.println("reply suceess!");
+
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+```
+
+BufferWriter,REader
+
+```python
+import java.io.*;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+//[Mã câu hỏi (qCode): RhYyuurm].
+// Một chương trình server cho phép kết nối qua giao thức TCP tại cổng 2208 (hỗ trợ thời gian giao tiếp tối đa cho mỗi yêu cầu là 5 giây).
+// Yêu cầu là xây dựng một chương trình client tương tác với server sử dụng các luồng ký tự (BufferedReader/BufferedWriter) theo kịch bản sau:
+//
+//a. Gửi một chuỗi chứa mã sinh viên và mã câu hỏi với định dạng "studentCode;qCode". Ví dụ: "B15DCCN999;C1234567"
+//
+//b. Nhận từ server một chuỗi chứa nhiều từ, các từ được phân tách bởi khoảng trắng. Ví dụ: "hello world this is a test example"
+//
+//c. Sắp xếp các từ trong chuỗi theo độ dài, thứ tự xuất hiện. Gửi danh sách các từ theo từng nhóm về server theo định dạng: "a, is, this, test, hello, world, example".
+//
+//d. Đóng kết nối và kết thúc chương trình.
+
+    public static void main(String[] args) {
+
+//      socket parameter
+        final String SERVER_HOST = "203.162.10.109";
+        final int PORT = 2208;
+        final int TIMEOUT = 5000;
+        int BUFFER_SIZE = 8192;
+        String message = "B22DCCN505;RhYyuurm";
+
+        try(Socket socket =  new Socket(SERVER_HOST, PORT)) {
+
+            socket.setSoTimeout(TIMEOUT);
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(socket.getOutputStream())
+            );
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream()));
+
+//            send message
+            writer.write(message);
+            writer.newLine();
+            writer.flush();
+            System.out.println("send success !");
+
+//            received data
+            String response = reader.readLine();
+            System.out.println(response);
+
+//            handle request
+            List<String> strs = Arrays.asList(response.split(" "));
+            strs.sort(Comparator.comparingInt(String::length));
+            String result = String.join(", ",strs);
+            System.out.println(result);
+
+//            send
+            writer.write(result);
+            writer.newLine();
+            writer.flush();
+
+// d. Đóng kết nối
+            System.out.println("Done, closing socket.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+```
+
+max hoa RLE
+
+```python
+ public static String encode(String input) {
+        StringBuilder sb = new StringBuilder();
+        int count = 1;
+        for (int i = 1; i <= input.length(); i++) {
+            if (i < input.length() && input.charAt(i) == input.charAt(i - 1)) {
+                count++;
+            } else {
+                sb.append(count).append(input.charAt(i - 1));
+                count = 1;
+            }
+        }
+        return sb.toString();
+    }
+
+    public static String decode(String input) {
+        StringBuilder sb = new StringBuilder();
+        StringBuilder num = new StringBuilder();
+        for (char c : input.toCharArray()) {
+            if (Character.isDigit(c)) {
+                num.append(c);
+            } else {
+                int count = Integer.parseInt(num.toString());
+                sb.append(String.valueOf(c).repeat(count));
+                num.setLength(0);
+            }
+        }
+        return sb.toString();
+    }
+
+     public static String reverseWords(String input) {
+        String[] words = input.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            sb.append(new StringBuilder(words[i]).reverse());
+            if (i < words.length - 1) sb.append(" ");
+        }
+        return sb.toString();
+    }
+```
+
+InputStream/OutputStream
+
+```python
+public static void main(String[] args) {
+        final String SERVER_HOST = "203.162.10.109";
+        final int PORT = 2206;
+        final int TIMEOUT = 5000;
+
+        String message = "B22DCCN505;OZSmKXpU";
+
+        try (Socket socket = new Socket(SERVER_HOST, PORT)) {
+            socket.setSoTimeout(TIMEOUT);
+
+            InputStream is = socket.getInputStream();
+            OutputStream os = socket.getOutputStream();
+
+            // a. Gửi mã sinh viên + qCode (kèm newline để server biết kết thúc gói tin)
+            os.write((message + "\n").getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            System.out.println("Sent: " + message);
+
+            // b. Đọc dữ liệu từ server (đọc đến khi gặp newline hoặc hết dữ liệu)
+            byte[] buffer = new byte[8192];
+            int len = is.read(buffer);
+            if (len == -1) {
+                System.err.println("No response from server.");
+                return;
+            }
+            String response = new String(buffer, 0, len, StandardCharsets.UTF_8).trim();
+            System.out.println("Received: " + response);
+
+            // c. Xử lý chuỗi số
+            int[] numbers = Arrays.stream(response.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .mapToInt(Integer::parseInt)
+                    .toArray();
+
+            long total = Arrays.stream(numbers).asLongStream().sum();
+            long left = 0;
+            long bestLeft = 0, bestRight = 0;
+            long minDiff = Long.MAX_VALUE;
+            int bestIndex = 0;
+
+            for (int i = 0; i < numbers.length; i++) {
+                long right = total - left - numbers[i];
+                long diff = Math.abs(left - right);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    bestIndex = i;
+                    bestLeft = left;
+                    bestRight = right;
+                }
+                left += numbers[i];
+            }
+
+            // kết quả theo định dạng: "index,left,right,diff"
+            String result = bestIndex + "," + bestLeft + "," + bestRight + "," + minDiff;
+            os.write((result + "\n").getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            System.out.println("Sent result: " + result);
+
+            System.out.println("Done, closing socket.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+```
